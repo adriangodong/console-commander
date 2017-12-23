@@ -1,0 +1,21 @@
+image: Visual Studio 2017
+configuration: Release
+version: '{build}.0.0'
+
+dotnet_csproj:
+  patch: true
+  file: 'ConsoleCommander\ConsoleCommander.csproj'
+  version: $(appveyor_build_version)
+
+before_build:
+- cmd: dotnet restore
+
+build:
+  project: ConsoleCommander.sln
+
+test_script:
+  - cmd: dotnet test ConsoleCommander.Tests/ConsoleCommander.Tests.csproj
+
+artifacts:
+- path: '**/*.nupkg'
+  name: Nuget Packages
