@@ -7,6 +7,8 @@ namespace ConsoleCommander
     public class CommandLoop
     {
 
+        private const string Prompt = "> ";
+
         private readonly ExecutionContext executionContext = new ExecutionContext();
         private readonly IOutputService outputService;
         private readonly CommandTokenizer commandTokenizer;
@@ -14,7 +16,7 @@ namespace ConsoleCommander
         public CommandLoop(IOutputService outputService, List<ICommandParser> commandParsers)
         {
             this.outputService = outputService;
-            commandTokenizer = new CommandTokenizer(commandParsers);
+            commandTokenizer = new CommandTokenizer(commandParsers, Prompt);
         }
 
         public void AddCommand(ICommand command)
@@ -41,8 +43,7 @@ namespace ConsoleCommander
                 // If there are no command in the queue, ask for a new one from user
                 if (executionContext.CommandQueue.Count == 0)
                 {
-                    Console.Write("> ");
-                    var command = Console.ReadLine();
+                    var command = commandTokenizer.ReadWithTabCompletion();
                     var parseOutput = commandTokenizer.Parse(command);
 
                     if (parseOutput.command == null)

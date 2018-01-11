@@ -15,7 +15,7 @@ namespace ConsoleCommander.Tests
         public void Init()
         {
             mockCommandParser = new Mock<ICommandParser>();
-            commandParser = new CommandTokenizer(new List<ICommandParser>() { mockCommandParser.Object });
+            commandParser = new CommandTokenizer(new List<ICommandParser>() { mockCommandParser.Object }, string.Empty);
         }
 
         [TestMethod]

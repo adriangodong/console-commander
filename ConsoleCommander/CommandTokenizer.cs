@@ -10,10 +10,29 @@ namespace ConsoleCommander
         public const string Error_UnknownFirstToken = "Unknown first token '{0}'";
 
         private readonly List<ICommandParser> commandParsers;
+        private readonly string prompt;
 
-        public CommandTokenizer(List<ICommandParser> commandParsers)
+        public CommandTokenizer(List<ICommandParser> commandParsers, string prompt)
         {
             this.commandParsers = commandParsers;
+            this.prompt = prompt;
+        }
+
+        public string ReadWithTabCompletion()
+        {
+            var completableReadLine = new CompletableReadLine(GenerateCompletionTree(commandParsers));
+
+            // Reset console line
+            ClearCurrentConsoleLine();
+            Console.Write(prompt);
+
+            while (completableReadLine.ReadKey(Console.ReadKey()))
+            {
+                ClearCurrentConsoleLine();
+                Console.Write(prompt + completableReadLine.GetReadLine());
+            }
+
+            return completableReadLine.GetReadLine();
         }
 
         public (ICommand command, string error) Parse(string command)
@@ -39,6 +58,24 @@ namespace ConsoleCommander
             }
 
             return (null, string.Format(Error_UnknownFirstToken, tokens[0]));
+        }
+
+        private static TreeNode<string> GenerateCompletionTree(IEnumerable<ICommandParser> commandParsers)
+        {
+            var commandTreeNodes = new List<TreeNode<string>>();
+            foreach (var commandParser in commandParsers)
+            {
+                commandTreeNodes.AddRange(commandParser.GetCompletionTree());
+            }
+            return new TreeNode<string>(null, commandTreeNodes);
+        }
+
+        private static void ClearCurrentConsoleLine()
+        {
+            int currentLineCursor = Console.CursorTop;
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.Write(new string(' ', Console.WindowWidth));
+            Console.SetCursorPosition(0, currentLineCursor);
         }
 
     }
