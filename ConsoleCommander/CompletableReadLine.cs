@@ -7,23 +7,40 @@ namespace ConsoleCommander
 {
     internal class CompletableReadLine
     {
-        private readonly TreeNode<string> completionTreeRootNode;
+        private readonly CommandNode rootCommandNode;
         private readonly StringBuilder builder;
 
         private string lastUserInput;
-        private IEnumerable<TreeNode<string>> activeCompletions;
+        private IEnumerable<CommandNode> activeCompletions;
         private int completionIndex;
 
-        public CompletableReadLine(TreeNode<string> completionTreeRootNode)
+        public CompletableReadLine(CommandNode rootCommandNode)
         {
-            this.completionTreeRootNode = completionTreeRootNode;
+            this.rootCommandNode = rootCommandNode;
             builder = new StringBuilder();
             lastUserInput = string.Empty;
-            activeCompletions = completionTreeRootNode.Children;
+            activeCompletions = rootCommandNode.Children;
+        }
+
+        public string ReadLine(string prompt)
+        {
+            var completableReadLine = new CompletableReadLine(rootCommandNode);
+
+            // Reset console line
+            ClearCurrentConsoleLine();
+            Console.Write(prompt);
+
+            while (completableReadLine.ReadKey(Console.ReadKey()))
+            {
+                ClearCurrentConsoleLine();
+                Console.Write(prompt + completableReadLine.GetReadLine());
+            }
+
+            return completableReadLine.GetReadLine();
         }
 
         /// <returns>True if loop should continue. If False, get final user input by calling GetReadLine().</returns>
-        public bool ReadKey(ConsoleKeyInfo input)
+        internal bool ReadKey(ConsoleKeyInfo input)
         {
             switch (input.Key)
             {
@@ -44,7 +61,7 @@ namespace ConsoleCommander
             return true;
         }
 
-        public string GetReadLine()
+        internal string GetReadLine()
         {
             return builder.ToString();
         }
@@ -91,9 +108,8 @@ namespace ConsoleCommander
             }
         }
 
-        private IEnumerable<TreeNode<string>> GetValidCompletionTree()
+        private IEnumerable<CommandNode> GetValidCompletionTree()
         {
-            var currentNode = completionTreeRootNode;
             var lastBlock = ParseLastUserInputLastBlock();
 
             // Trim last block from completion tree calculation since it is an unfinished block
@@ -101,27 +117,13 @@ namespace ConsoleCommander
                 lastUserInput.Remove(lastBlock.index) :
                 lastUserInput;
 
-            foreach (var block in commitedUserInput.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                TreeNode<string> matchedNode = null;
+            var matchedCommandNode = rootCommandNode.FindNode(
+                commitedUserInput.Split(
+                    new[] { " " },
+                    StringSplitOptions.RemoveEmptyEntries),
+                exact: true);
 
-                foreach (var node in currentNode.Children)
-                {
-                    if (node.Value == block)
-                    {
-                        matchedNode = node;
-                    }
-                }
-
-                if (matchedNode == null)
-                {
-                    return new List<TreeNode<string>>();
-                }
-
-                currentNode = matchedNode;
-            }
-
-            return currentNode.Children;
+            return matchedCommandNode?.Children ?? new List<CommandNode>();
         }
 
         private (string prefix, int index) ParseLastUserInputLastBlock()
@@ -136,6 +138,14 @@ namespace ConsoleCommander
                 var lastIndexOfBlock = lastIndexOfSeparator + 1;
                 return (lastUserInput.Substring(lastIndexOfBlock, lastUserInput.Length - lastIndexOfBlock), lastIndexOfBlock);
             }
+        }
+
+        private static void ClearCurrentConsoleLine()
+        {
+            var currentLineCursor = Console.CursorTop;
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.Write(new string(' ', Console.WindowWidth));
+            Console.SetCursorPosition(0, currentLineCursor);
         }
     }
 }

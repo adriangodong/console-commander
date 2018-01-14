@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace ConsoleCommander.Tests
 {
@@ -8,15 +8,15 @@ namespace ConsoleCommander.Tests
     public class CompletableReadLineTests
     {
 
+        private Mock<ICommandParser> mockCommandParser;
         private CompletableReadLine completableReadLine;
 
         [TestInitialize]
         public void Init()
         {
+            mockCommandParser = new Mock<ICommandParser>();
             completableReadLine = new CompletableReadLine(
-                new TreeNode<string>(
-                    string.Empty,
-                    new List<TreeNode<string>>()));
+                new CommandNode(string.Empty, mockCommandParser.Object, null));
         }
 
         [TestMethod]

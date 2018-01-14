@@ -1,22 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ConsoleCommander
 {
     public class CommandLoop
     {
-
         private const string Prompt = "> ";
 
         private readonly ExecutionContext executionContext = new ExecutionContext();
         private readonly IOutputService outputService;
-        private readonly CommandTokenizer commandTokenizer;
+        private readonly CommandNode rootCommandNode;
 
-        public CommandLoop(IOutputService outputService, List<ICommandParser> commandParsers)
+        public CommandLoop(IOutputService outputService, CommandNode rootCommandNode)
         {
             this.outputService = outputService;
-            commandTokenizer = new CommandTokenizer(commandParsers, Prompt);
+            this.rootCommandNode = rootCommandNode;
         }
 
         public void AddCommand(ICommand command)
@@ -43,8 +41,12 @@ namespace ConsoleCommander
                 // If there are no command in the queue, ask for a new one from user
                 if (executionContext.CommandQueue.Count == 0)
                 {
-                    var command = commandTokenizer.ReadWithTabCompletion();
-                    var parseOutput = commandTokenizer.Parse(command);
+                    var completableReadLine = new CompletableReadLine(rootCommandNode);
+                    var command = completableReadLine.ReadLine(Prompt);
+                    var commandTokens = command.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    var closestCommandNode = rootCommandNode.FindNode(commandTokens);
+
+                    var parseOutput = closestCommandNode.ParseFunction(commandTokens);
 
                     if (parseOutput.command == null)
                     {
@@ -66,6 +68,5 @@ namespace ConsoleCommander
                 }
             }
         }
-
     }
 }
