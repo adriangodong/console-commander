@@ -3,7 +3,7 @@
     public class RootCommandParser : ICommandParser
     {
         private const string Error_EmptyCommand = "Empty command";
-        private const string Error_UnknownFirstToken = "Unknown first token '{0}'";
+        private const string Error_UnknownCommand = "Unknown command";
 
         public (ICommand command, string error) Parse(string[] commandTokens)
         {
@@ -12,7 +12,7 @@
                 return (null, Error_EmptyCommand);
             }
 
-            return (null, Error_UnknownFirstToken);
+            return (null, Error_UnknownCommand);
         }
     }
 }

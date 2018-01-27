@@ -5,6 +5,12 @@ namespace ConsoleCommander
 {
     public class CommandNode
     {
+        // Creates a "completion" node. Will never match FindNode().
+        public CommandNode(string value)
+        {
+            Value = value;
+        }
+
         public CommandNode(
             string value,
             Func<string[], (ICommand, string)> parseFunction,
@@ -42,7 +48,8 @@ namespace ConsoleCommander
                 {
                     foreach (var node in currentNode.Children)
                     {
-                        if (node.Value == block)
+                        if (node.ParseFunction != null &&
+                            node.Value == block)
                         {
                             matchedNode = node;
                         }

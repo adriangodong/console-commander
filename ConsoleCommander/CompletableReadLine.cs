@@ -53,6 +53,11 @@ namespace ConsoleCommander
                 case ConsoleKey.Backspace:
                     TrimChar();
                     break;
+                case ConsoleKey.UpArrow:
+                case ConsoleKey.DownArrow:
+                case ConsoleKey.LeftArrow:
+                case ConsoleKey.RightArrow:
+                    break;
                 default:
                     AppendChar(input.KeyChar);
                     break;
